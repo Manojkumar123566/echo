@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoVerse - AI-Powered Audiobook Creation Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: white;
+            color: black;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .audio-player-container {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        
+        .waveform {
+            width: 100%;
+            height: 60px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            position: relative;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .waveform-bars {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 10px;
+            gap: 2px;
+        }
+        
+        .waveform-bar {
+            background: #cbd5e1;
+            width: 3px;
+            height: 20%;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+        }
+        
+        .waveform-bar.active {
+            background: #3b82f6;
+            height: 80%;
+        }
+        
+        .text-highlight {
+            background: linear-gradient(120deg, #fef3c7 0%, #fde68a 100%);
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .text-box {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .upload-area.dragover {
+            border-color: #1d4ed8;
+            background: #eff6ff;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .tone-selector {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .tone-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .tone-btn.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        
+        .voice-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .voice-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .voice-card.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .voice-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #6b7280;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .voice-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen gradient-bg">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-blue-500 text-white rounded-lg p-3">
+                            <i class="fas fa-microphone-alt text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">EchoVerse</h1>
+                            <p class="text-sm text-gray-600">AI-Powered Audiobook Creation Tool</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-sm text-gray-600">
+                            <i class="fas fa-robot mr-2"></i>
+                            IBM Watson AI Powered
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Input Section -->
+            <section class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h2 class="text-xl font-semibold mb-6 flex items-center">
+                    <i class="fas fa-file-text text-blue-500 mr-3"></i>
+                    Input Your Content
+                </h2>
+                
+                <!-- File Upload Area -->
+                <div class="upload-area mb-6" id="uploadArea">
+                    <div class="mb-4">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-lg font-medium">Drop your .txt file here or click to browse</p>
+                        <p class="text-sm text-gray-500 mt-2">Maximum file size: 20MB</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".txt" class="hidden">
+                    <button onclick="document.getElementById('fileInput').click()" class="btn-secondary">
+                        <i class="fas fa-folder-open mr-2"></i>
+                        Choose File
+                    </button>
+                </div>
+                
+                <!-- Text Input -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-3">Or paste your text directly:</label>
+                    <textarea 
+                        id="textInput" 
+                        placeholder="Enter your text here..."
+                        class="w-full h-40 p-4 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none resize-vertical"
+                    ></textarea>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="text-2xl font-bold text-blue-600" id="charCount">0</div>
+                        <div class="text-sm text-gray-600">Characters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-2xl font-bold text-green-600" id="wordCount">0</div>
+                        <div class="text-sm text-gray-600">Words</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-2xl font-bold text-purple-600" id="readTime">0m</div>
+                        <div class="text-sm text-gray-600">Read Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="text-2xl font-bold text-orange-600" id="audioTime">0m</div>
+                        <div class="text-sm text-gray-600">Audio Time</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tone Selection -->
+            <section class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h2 class="text-xl font-semibold mb-6 flex items-center">
+                    <i class="fas fa-palette text-blue-500 mr-3"></i>
+                    Choose Tone & Style
+                </h2>
+                
+                <div class="tone-selector">
+                    <div class="tone-btn active" data-tone="neutral">
+                        <i class="fas fa-balance-scale text-2xl mb-3 text-gray-600"></i>
+                        <h3 class="font-semibold">Neutral</h3>
+                        <p class="text-sm text-gray-600 mt-2">Clear and balanced narration for educational content</p>
+                    </div>
+                    <div class="tone-btn" data-tone="suspenseful">
+                        <i class="fas fa-eye text-2xl mb-3 text-red-600"></i>
+                        <h3 class="font-semibold">Suspenseful</h3>
+                        <p class="text-sm text-gray-600 mt-2">Dramatic and engaging tone for thrillers and mysteries</p>
+                    </div>
+                    <div class="tone-btn" data-tone="inspiring">
+                        <i class="fas fa-rocket text-2xl mb-3 text-yellow-600"></i>
+                        <h3 class="font-semibold">Inspiring</h3>
+                        <p class="text-sm text-gray-600 mt-2">Uplifting and motivational tone for personal development</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voice Selection -->
+            <section class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h2 class="text-xl font-semibold mb-6 flex items-center">
+                    <i class="fas fa-user-friends text-blue-500 mr-3"></i>
+                    Select Voice Narrator
+                </h2>
+                
+                <div class="voice-selector">
+                    <div class="voice-card selected" data-voice="lisa">
+                        <div class="voice-avatar">
+                            <i class="fas fa-female"></i>
+                        </div>
+                        <h3 class="font-semibold">Lisa</h3>
+                        <p class="text-sm text-gray-600 mb-3">Warm, professional female voice</p>
+                        <button class="btn-secondary text-sm" onclick="previewVoice('lisa')">
+                            <i class="fas fa-play mr-1"></i>
+                            Preview
+                        </button>
+                    </div>
+                    
+                    <div class="voice-card" data-voice="michael">
+                        <div class="voice-avatar">
+                            <i class="fas fa-male"></i>
+                        </div>
+                        <h3 class="font-semibold">Michael</h3>
+                        <p class="text-sm text-gray-600 mb-3">Deep, authoritative male voice</p>
+                        <button class="btn-secondary text-sm" onclick="previewVoice('michael')">
+                            <i class="fas fa-play mr-1"></i>
+                            Preview
+                        </button>
+                    </div>
+                    
+                    <div class="voice-card" data-voice="allison">
+                        <div class="voice-avatar">
+                            <i class="fas fa-female"></i>
+                        </div>
+                        <h3 class="font-semibold">Allison</h3>
+                        <p class="text-sm text-gray-600 mb-3">Clear, conversational female voice</p>
+                        <button class="btn-secondary text-sm" onclick="previewVoice('allison')">
+                            <i class="fas fa-play mr-1"></i>
+                            Preview
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Process Button -->
+            <section class="text-center mb-8">
+                <button id="processBtn" class="btn-primary text-lg px-12 py-4" onclick="processText()">
+                    <i class="fas fa-magic mr-2"></i>
+                    Generate Audiobook
+                </button>
+            </section>
+
+            <!-- Text Comparison -->
+            <section id="comparisonSection" class="bg-white rounded-lg shadow-lg p-8 mb-8 hidden">
+                <h2 class="text-xl font-semibold mb-6 flex items-center">
+                    <i class="fas fa-columns text-blue-500 mr-3"></i>
+                    Text Comparison
+                </h2>
+                
+                <div class="comparison-container">
+                    <div>
+                        <h3 class="font-semibold mb-4 flex items-center">
+                            <i class="fas fa-file-alt text-gray-500 mr-2"></i>
+                            Original Text
+                        </h3>
+                        <div id="originalText" class="text-box text-sm leading-relaxed">
+                            <!-- Original text will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold mb-4 flex items-center">
+                            <i class="fas fa-wand-magic-sparkles text-blue-500 mr-2"></i>
+                            AI-Enhanced Text (<span id="selectedTone">Neutral</span> Tone)
+                        </h3>
+                        <div id="enhancedText" class="text-box text-sm leading-relaxed">
+                            <!-- Enhanced text will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio Player -->
+            <section id="audioSection" class="bg-white rounded-lg shadow-lg p-8 mb-8 hidden">
+                <h2 class="text-xl font-semibold mb-6 flex items-center">
+                    <i class="fas fa-headphones text-blue-500 mr-3"></i>
+                    Audio Player
+                </h2>
+                
+                <div class="audio-player-container">
+                    <!-- Waveform Visualization -->
+                    <div class="waveform" id="waveform">
+                        <div class="waveform-bars" id="waveformBars">
+                            <!-- Waveform bars will be generated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-bar-fill" id="progressFill"></div>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                            <span id="currentTime">0:00</span>
+                            <span id="totalTime">0:00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="flex items-center justify-center space-x-6 mb-6">
+                        <button class="btn-secondary" onclick="changeSpeed(-0.25)">
+                            <i class="fas fa-backward"></i>
+                        </button>
+                        <button class="btn-secondary" onclick="skipBackward()">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button id="playPauseBtn" class="btn-primary text-xl px-6" onclick="togglePlayPause()">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="btn-secondary" onclick="skipForward()">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                        <button class="btn-secondary" onclick="changeSpeed(0.25)">
+                            <i class="fas fa-forward"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Speed and Volume Controls -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <label class="text-sm font-medium">Speed:</label>
+                            <select id="speedSelect" class="border border-gray-300 rounded px-3 py-1" onchange="setSpeed()">
+                                <option value="0.5">0.5x</option>
+                                <option value="0.75">0.75x</option>
+                                <option value="1" selected>1x</option>
+                                <option value="1.25">1.25x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2x</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <i class="fas fa-volume-down"></i>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="50" class="w-24" onchange="setVolume()">
+                            <i class="fas fa-volume-up"></i>
+                        </div>
+                        
+                        <button class="btn-primary" onclick="downloadAudio()">
+                            <i class="fas fa-download mr-2"></i>
+                            Download MP3
+                        </button>
+                    </div>
+                    
+                    <!-- Text Highlighting -->
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-medium mb-3">Real-time Text Highlighting</h4>
+                        <div id="highlightedText" class="text-sm leading-relaxed max-h-40 overflow-y-auto">
+                            <!-- Text with highlighting will appear here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden audio element -->
+                <audio id="audioPlayer" preload="metadata"></audio>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check mr-2"></i>
+        <span id="notificationText">Success!</span>
+    </div>
+
+    <script>
+        // Global variables
+        let currentText = '';
+        let enhancedText = '';
+        let selectedTone = 'neutral';
+        let selectedVoice = 'lisa';
+        let audioPlayer = null;
+        let isPlaying = false;
+        let currentWordIndex = 0;
+        let words = [];
+        let audioInterval = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            updateStats();
+            generateWaveform();
+        });
+
+        function initializeEventListeners() {
+            // File input
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.getElementById('uploadArea');
+            const textInput = document.getElementById('textInput');
+
+            fileInput.addEventListener('change', handleFileUpload);
+            textInput.addEventListener('input', function() {
+                currentText = this.value;
+                updateStats();
+            });
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            // Tone selection
+            document.querySelectorAll('.tone-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedTone = this.dataset.tone;
+                });
+            });
+
+            // Voice selection
+            document.querySelectorAll('.voice-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedVoice = this.dataset.voice;
+                });
+            });
+
+            // Audio player
+            audioPlayer = document.getElementById('audioPlayer');
+            if (audioPlayer) {
+                audioPlayer.addEventListener('timeupdate', updateProgress);
+                audioPlayer.addEventListener('loadedmetadata', function() {
+                    document.getElementById('totalTime').textContent = formatTime(audioPlayer.duration);
+                });
+                audioPlayer.addEventListener('ended', function() {
+                    resetPlayer();
+                });
+            }
+
+            // Progress bar click
+            document.getElementById('progressBar').addEventListener('click', function(e) {
+                if (audioPlayer && audioPlayer.duration) {
+                    const rect = this.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    audioPlayer.currentTime = percent * audioPlayer.duration;
+                }
+            });
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (file.type !== 'text/plain') {
+                showNotification('Please select a .txt file', 'error');
+                return;
+            }
+
+            if (file.size > 20 * 1024 * 1024) { // 20MB limit
+                showNotification('File size must be less than 20MB', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentText = e.target.result;
+                document.getElementById('textInput').value = currentText;
+                updateStats();
+                showNotification('File uploaded successfully!');
+            };
+            reader.readAsText(file);
+        }
+
+        function updateStats() {
+            const text = currentText;
+            const charCount = text.length;
+            const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            const readTime = Math.ceil(wordCount / 200); // 200 WPM average
+            const audioTime = Math.ceil(wordCount / 150); // 150 WPM for speech
+
+            document.getElementById('charCount').textContent = charCount.toLocaleString();
+            document.getElementById('wordCount').textContent = wordCount.toLocaleString();
+            document.getElementById('readTime').textContent = readTime + 'm';
+            document.getElementById('audioTime').textContent = audioTime + 'm';
+        }
+
+        function previewVoice(voice) {
+            // Simulate voice preview
+            const utterance = new SpeechSynthesisUtterance("Hello, this is " + voice + " speaking. This is a preview of how your audiobook will sound.");
+            
+            // Try to set voice characteristics based on selection
+            const voices = speechSynthesis.getVoices();
+            let selectedVoiceObj = voices.find(v => 
+                v.name.toLowerCase().includes(voice.toLowerCase()) ||
+                (voice === 'lisa' && v.name.includes('female')) ||
+                (voice === 'michael' && v.name.includes('male')) ||
+                (voice === 'allison' && v.name.includes('female'))
+            );
+            
+            if (selectedVoiceObj) {
+                utterance.voice = selectedVoiceObj;
+            }
+            
+            speechSynthesis.speak(utterance);
+            showNotification(Playing ${voice} preview);
+        }
+
+        function processText() {
+            if (!currentText.trim()) {
+                showNotification('Please enter some text first', 'error');
+                return;
+            }
+
+            const processBtn = document.getElementById('processBtn');
+            const originalHtml = processBtn.innerHTML;
+            
+            processBtn.innerHTML = '<div class="loading-spinner mr-2"></div>Processing...';
+            processBtn.disabled = true;
+
+            // Simulate AI processing
+            setTimeout(() => {
+                enhanceTextWithTone();
+                generateAudio();
+                
+                processBtn.innerHTML = originalHtml;
+                processBtn.disabled = false;
+                
+                // Show results
+                document.getElementById('comparisonSection').classList.remove('hidden');
+                document.getElementById('audioSection').classList.remove('hidden');
+                
+                showNotification('Audiobook generated successfully!');
+            }, 3000);
+        }
+
+        function enhanceTextWithTone() {
+            // Simulate IBM Granite AI text enhancement
+            const toneEnhancements = {
+                neutral: (text) => {
+                    return text.replace(/\./g, '. ').replace(/\s+/g, ' ').trim();
+                },
+                suspenseful: (text) => {
+                    return text
+                        .replace(/\./g, '... ')
+                        .replace(/\!/g, '! ')
+                        .replace(/(\w+)(,|\.|;)/g, (match, word, punct) => {
+                            if (Math.random() > 0.7) {
+                                return *${word}*${punct};
+                            }
+                            return match;
+                        });
+                },
+                inspiring: (text) => {
+                    return text
+                        .replace(/\b(can|will|achieve|success|believe|dream)\b/gi, (match) => **${match}**)
+                        .replace(/\./g, '! ')
+                        .replace(/\s+/g, ' ');
+                }
+            };
+
+            enhancedText = toneEnhancements[selectedTone](currentText);
+            
+            // Display texts
+            document.getElementById('originalText').textContent = currentText;
+            document.getElementById('enhancedText').innerHTML = enhancedText.replace(/\\(.?)\\/g, '<strong>$1</strong>').replace(/\(.?)\/g, '<em>$1</em>');
+            document.getElementById('selectedTone').textContent = selectedTone.charAt(0).toUpperCase() + selectedTone.slice(1);
+        }
+
+        function generateAudio() {
+            // Simulate audio generation - in real app, this would call IBM Watson TTS
+            const textToSpeak = enhancedText.replace(/\\/g, '').replace(/\*/g, '');
+            
+            // For demo, we'll use Web Speech API
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                
+                // Set voice characteristics
+                const voices = speechSynthesis.getVoices();
+                let voiceObj = voices.find(v => 
+                    v.name.toLowerCase().includes(selectedVoice.toLowerCase()) ||
+                    (selectedVoice === 'lisa' && (v.name.includes('female') || v.name.includes('woman'))) ||
+                    (selectedVoice === 'michael' && (v.name.includes('male') || v.name.includes('man'))) ||
+                    (selectedVoice === 'allison' && (v.name.includes('female') || v.name.includes('woman')))
+                );
+                
+                if (voiceObj) {
+                    utterance.voice = voiceObj;
+                }
+                
+                // Set tone characteristics
+                switch(selectedTone) {
+                    case 'suspenseful':
+                        utterance.rate = 0.8;
+                        utterance.pitch = 0.8;
+                        break;
+                    case 'inspiring':
+                        utterance.rate = 1.1;
+                        utterance.pitch = 1.2;
+                        break;
+                    default:
+                        utterance.rate = 1;
+                        utterance.pitch = 1;
+                }
+
+                // Prepare highlighted text
+                words = textToSpeak.split(/\s+/);
+                prepareHighlightedText();
+            }
+        }
+
+        function prepareHighlightedText() {
+            const highlightContainer = document.getElementById('highlightedText');
+            highlightContainer.innerHTML = words.map((word, index) => 
+                <span class="word" data-index="${index}">${word}</span>
+            ).join(' ');
+        }
+
+        function togglePlayPause() {
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            
+            if (!isPlaying) {
+                playAudio();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                isPlaying = true;
+            } else {
+                pauseAudio();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                isPlaying = false;
+            }
+        }
+
+        function playAudio() {
+            if ('speechSynthesis' in window) {
+                const textToSpeak = enhancedText.replace(/\\/g, '').replace(/\*/g, '');
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                
+                // Set voice and characteristics (same as before)
+                const voices = speechSynthesis.getVoices();
+                let voiceObj = voices.find(v => 
+                    v.name.toLowerCase().includes(selectedVoice.toLowerCase()) ||
+                    (selectedVoice === 'lisa' && (v.name.includes('female') || v.name.includes('woman'))) ||
+                    (selectedVoice === 'michael' && (v.name.includes('male') || v.name.includes('man'))) ||
+                    (selectedVoice === 'allison' && (v.name.includes('female') || v.name.includes('woman')))
+                );
+                
+                if (voiceObj) {
+                    utterance.voice = voiceObj;
+                }
+                
+                switch(selectedTone) {
+                    case 'suspenseful':
+                        utterance.rate = 0.8;
+                        utterance.pitch = 0.8;
+                        break;
+                    case 'inspiring':
+                        utterance.rate = 1.1;
+                        utterance.pitch = 1.2;
+                        break;
+                    default:
+                        utterance.rate = 1;
+                        utterance.pitch = 1;
+                }
+
+                utterance.onend = () => {
+                    resetPlayer();
+                };
+
+                speechSynthesis.speak(utterance);
+                
+                // Start highlighting simulation
+                startHighlighting();
+                startWaveformAnimation();
+            }
+        }
+
+        function pauseAudio() {
+            speechSynthesis.pause();
+            clearInterval(audioInterval);
+            stopWaveformAnimation();
+        }
+
+        function resetPlayer() {
+            isPlaying = false;
+            currentWordIndex = 0;
+            document.getElementById('playPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('currentTime').textContent = '0:00';
+            clearInterval(audioInterval);
+            clearHighlighting();
+            stopWaveformAnimation();
+            speechSynthesis.cancel();
+        }
+
+        function startHighlighting() {
+            const wordsPerSecond = 2.5; // Approximate speaking rate
+            const intervalTime = 1000 / wordsPerSecond;
+            
+            audioInterval = setInterval(() => {
+                if (currentWordIndex < words.length) {
+                    // Clear previous highlighting
+                    document.querySelectorAll('.word').forEach(w => w.classList.remove('text-highlight'));
+                    
+                    // Highlight current word
+                    const currentWord = document.querySelector([data-index="${currentWordIndex}"]);
+                    if (currentWord) {
+                        currentWord.classList.add('text-highlight');
+                        currentWord.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    // Update progress
+                    const progress = (currentWordIndex / words.length) * 100;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    
+                    // Update time (approximate)
+                    const currentSeconds = Math.floor(currentWordIndex / wordsPerSecond);
+                    document.getElementById('currentTime').textContent = formatTime(currentSeconds);
+                    
+                    currentWordIndex++;
+                } else {
+                    resetPlayer();
+                }
+            }, intervalTime);
+        }
+
+        function clearHighlighting() {
+            document.querySelectorAll('.word').forEach(w => w.classList.remove('text-highlight'));
+        }
+
+        function skipBackward() {
+            currentWordIndex = Math.max(0, currentWordIndex - 10);
+        }
+
+        function skipForward() {
+            currentWordIndex = Math.min(words.length - 1, currentWordIndex + 10);
+        }
+
+        function changeSpeed(delta) {
+            const speedSelect = document.getElementById('speedSelect');
+            const currentSpeed = parseFloat(speedSelect.value);
+            const newSpeed = Math.max(0.5, Math.min(2, currentSpeed + delta));
+            speedSelect.value = newSpeed;
+            setSpeed();
+        }
+
+        function setSpeed() {
+            const speed = parseFloat(document.getElementById('speedSelect').value);
+            // This would affect the speech synthesis rate in a real implementation
+            showNotification(Playback speed set to ${speed}x);
+        }
+
+        function setVolume() {
+            const volume = parseInt(document.getElementById('volumeSlider').value);
+            // This would affect the audio volume in a real implementation
+        }
+
+        function generateWaveform() {
+            const waveformBars = document.getElementById('waveformBars');
+            const barCount = 100;
+            
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'waveform-bar';
+                bar.style.height = Math.random() * 80 + 20 + '%';
+                waveformBars.appendChild(bar);
+            }
+        }
+
+        function startWaveformAnimation() {
+            const bars = document.querySelectorAll('.waveform-bar');
+            let currentBar = 0;
+            
+            const animateWaveform = () => {
+                bars.forEach((bar, index) => {
+                    bar.classList.remove('active');
+                    if (index >= currentBar && index < currentBar + 5) {
+                        bar.classList.add('active');
+                    }
+                });
+                
+                currentBar = (currentBar + 1) % bars.length;
+                
+                if (isPlaying) {
+                    setTimeout(animateWaveform, 100);
+                }
+            };
+            
+            animateWaveform();
+        }
+
+        function stopWaveformAnimation() {
+            document.querySelectorAll('.waveform-bar').forEach(bar => {
+                bar.classList.remove('active');
+            });
+        }
+
+        function updateProgress() {
+            // This would be used for real audio files
+            if (audioPlayer && audioPlayer.duration) {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('currentTime').textContent = formatTime(audioPlayer.currentTime);
+            }
+        }
+
+        function downloadAudio() {
+            // In a real implementation, this would download the generated MP3
+            showNotification('Audio download started! (Feature simulated)');
+            
+            // Simulate download
+            const link = document.createElement('a');
+            link.href = '#';
+            link.download = echoverse_audiobook_${selectedVoice}_${selectedTone}.mp3;
+            link.textContent = 'Download';
+            
+            // For demo purposes, show a message
+            setTimeout(() => {
+                showNotification('Download complete! Check your downloads folder.');
+            }, 2000);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return ${mins}:${secs.toString().padStart(2, '0')};
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            
+            if (type === 'error') {
+                notification.style.background = '#ef4444';
+            } else {
+                notification.style.background = '#10b981';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Load voices when available
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = function() {
+                // Voices are now loaded
+            };
+        }
+    </script>
+</body>
+</html>
